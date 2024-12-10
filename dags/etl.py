@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import logging
+import numpy as np
 import pandas as pd
 from typing import Any
 import pyspark.sql.functions as F
@@ -42,7 +43,7 @@ default_args = {
 
 
 @dag(
-    dag_id="ingestion_process_to_snowflake_v2006",
+    dag_id="ingestion_process_to_snowflake_v1234",
     default_args=default_args,
     start_date=datetime(2024, 11, 15),
     schedule_interval="0 23 * * Mon,Wed,Fri",
@@ -86,31 +87,30 @@ def etl_ingestion_and_process_to_snowflake() -> None:
     )
     
     
-    #-----------------------------------#
-    # Batch Processing data using Spark #
-    #-----------------------------------#
+    #-----------------------------#
+    # Processing data using Spark #
+    #-----------------------------#
     @task.pyspark(
         conn_id="spark_connection_id",
         config_kwargs={
-        #     "spark.jars": "/usr/local/spark/jars/aws-java-sdk-bundle-1.12.779.jar, /usr/local/spark/jars/hadoop-aws-3.4.1.jar, /usr/local/spark/jars/s3-2.29.26.jar",
-            # "spark.driver.memory": "4g",
-            # "spark.executor.memory": "4g",
+            "spark.jars": "/usr/local/spark/jars/aws-java-sdk-bundle-1.12.779.jar, /usr/local/spark/jars/hadoop-aws-3.4.1.jar, /usr/local/spark/jars/s3-2.29.26.jar",
+            "spark.driver.memory": "4g",
+            "spark.executor.memory": "4g",
             "spark.hadoop.fs.s3a.endpoint": "http://minio:9000",
             "spark.hadoop.fs.s3a.access.key": "minio",
             "spark.hadoop.fs.s3a.secret.key": "minio123",
             "spark.hadoop.fs.s3a.path.style.access": "true",
             "spark.hadoop.fs.connection.ssl.enabled": "false",
-            # "spark.jars.packages": "org.apache.hadoop:hadoop-aws:3.4.1",
-            # "spark.jars.packages": "com.amazonaws:aws-java-sdk-bundle:1.12.779",
-            # "spark.jars.packages": "software.amazon.awssdk:auth:2.29.26",
-            # "spark.jars.packages": "com.amazonaws:aws-java-sdk-core:1.12.779",
-            # "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem"
+            "spark.jars.packages": "org.apache.hadoop:hadoop-aws:3.4.1",
+            "spark.jars.packages": "com.amazonaws:aws-java-sdk-bundle:1.12.779",
+            "spark.jars.packages": "software.amazon.awssdk:auth:2.29.26",
+            "spark.jars.packages": "com.amazonaws:aws-java-sdk-core:1.12.779",
+            "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem"
         }
     )
     def transforming_accident_data(spark: SparkSession, sc: SparkContext) -> None:
         try:
             df = spark.read.csv(FILE_PATH.format("raw", "US_Accidents_March23.csv"), header=True, inferSchema=True)
-            df = df.repartition(100)
             logger.info(f"columns number is {len(df.columns)}, records number is {df.count()}")
             
             df = df.na.drop(subset=[
@@ -152,15 +152,14 @@ def etl_ingestion_and_process_to_snowflake() -> None:
         
     @task.pyspark(
         conn_id="spark_connection_id",
-        # config_kwargs={
-        #     "spark.driver.memory": "4g",
-        #     "spark.executor.memory": "4g",
-        # }
+        config_kwargs={
+            "spark.driver.memory": "4g",
+            "spark.executor.memory": "4g",
+        }
     )
     def transforming_vehicle_data(spark: SparkSession, sc: SparkContext) -> None:
         try:
             df = spark.read.csv(FILE_PATH.format("raw", "Vehicle_Information.csv"), header=True, inferSchema=True)
-            df = df.repartition(100)
             logger.info(f"columns number is {len(df.columns)}, records number is {df.count()}")
             
             df = df.withColumnRenamed("Engine_Capacity_.CC.", "Engine_Capacity_CC")
@@ -212,18 +211,26 @@ def etl_ingestion_and_process_to_snowflake() -> None:
     )
     
     
+    #------------------------#
+    # Load data to Snowflake #
+    #------------------------#
     @task.snowpark
     def load_accident_data_to_snowflake(session: Session) -> None:
-        pandas_df = pd.read_csv(FILE_PATH.format("cleaned", "US_Accidents_March23_Cleaned.csv"), encoding='latin-1')
-        df_session = session.create_dataframe(data=pandas_df, schema=list(pandas_df.columns))
-        df_session.write.save_as_table(table_name="STAGING_ACCIDENT", mode="overwrite")
-        
+        pandas_df = pd.read_csv(FILE_PATH.format("cleaned", "US_Accidents_March23_Cleaned.csv"), chunksize=500000)
+        for i, chunk in enumerate(pandas_df, start=1):
+            logger.info(f"Processing chunk {i} with {len(chunk)} rows")
+            df_session = session.create_dataframe(data=chunk, schema=list(chunk.columns))
+            df_session.write.save_as_table(table_name="STAGING_ACCIDENT", mode="append")
+            logger.info(f"Loaded chunk {i} into Snowflake")
+
         
     @task.snowpark
     def load_vehicle_data_to_snowflake(session: Session) -> None:
         pandas_df = pd.read_csv(FILE_PATH.format("cleaned", "Vehicle_Information_Cleaned.csv"), encoding='latin-1')
         df_session = session.create_dataframe(data=pandas_df, schema=list(pandas_df.columns))
-        df_session.write.save_as_table(table_name="STAGING_VEHICLE", mode="overwrite")
+        df_session.write.save_as_table(table_name="STAGING_VEHICLE", mode="append")
+
+
 
 
     create_bucket_task = create_bucket()
@@ -232,11 +239,13 @@ def etl_ingestion_and_process_to_snowflake() -> None:
     transforming_accident_task = transforming_accident_data()
     transforming_vehicle_task = transforming_vehicle_data()
     
+    
     create_bucket_task >> upload_accident_file_to_bucket >> transforming_accident_task
     create_bucket_task >> upload_vehicle_file_to_bucket >> transforming_vehicle_task
     transforming_accident_task >> upload_accident_cleaned_file_to_bucket
     transforming_vehicle_task >> upload_vehicle_cleaned_file_to_bucket
     transforming_accident_task >> create_schema_snowflake >> load_accident_task
     transforming_vehicle_task >> create_schema_snowflake >> load_vehicle_task
+    
     
 etl_ingestion_and_process_to_snowflake()

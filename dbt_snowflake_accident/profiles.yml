@@ -1,0 +1,13 @@
+dbt_snowflake_accident:
+  outputs:
+    dev:
+      account: utngyqt-fr79047
+      database: ACCIDENT_US_DB
+      password: '@@Long2003'
+      role: ACCOUNTADMIN
+      schema: analytics
+      threads: 1
+      type: snowflake
+      user: LongNguyen
+      warehouse: COMPUTE_WH
+  target: dev

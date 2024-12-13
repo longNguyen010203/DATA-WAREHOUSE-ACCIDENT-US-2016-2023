@@ -1,0 +1,10 @@
+.dwa-venv/
+
+logs/
+minio/
+
+__pycache__/
+
+.env
+
+target/

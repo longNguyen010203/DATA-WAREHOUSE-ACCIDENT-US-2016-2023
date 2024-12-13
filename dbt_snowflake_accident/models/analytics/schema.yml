@@ -1,0 +1,312 @@
+version: 2
+
+models:
+  - name: dim_astronomical_periods
+    description: ""
+    columns:
+      - name: astronomical_periods_key
+        data_type: varchar
+        description: ""
+        tests:
+          - not_null
+          - unique
+
+      - name: sunrise_sunset
+        data_type: varchar
+        description: ""
+
+      - name: civil_twilight
+        data_type: varchar
+        description: ""
+
+      - name: nautical_twilight
+        data_type: varchar
+        description: ""
+
+      - name: astronomical_twilight
+        data_type: varchar
+        description: ""
+
+  - name: dim_city
+    description: ""
+    columns:
+      - name: city_key
+        data_type: varchar
+        description: ""
+
+      - name: county_id
+        data_type: varchar
+        description: ""
+
+      - name: city_name
+        data_type: varchar
+        description: ""
+
+  - name: dim_county
+    description: ""
+    columns:
+      - name: county_key
+        data_type: varchar
+        description: ""
+
+      - name: county_name
+        data_type: varchar
+        description: ""
+
+  - name: dim_driver
+    description: ""
+    columns:
+      - name: driver_key
+        data_type: varchar
+        description: ""
+
+      - name: age_band_of_driver
+        data_type: varchar
+        description: ""
+
+      - name: driver_home_area_type
+        data_type: varchar
+        description: ""
+
+      - name: driver_imd_decile
+        data_type: number
+        description: ""
+
+      - name: journey_purpose_of_driver
+        data_type: varchar
+        description: ""
+
+      - name: sex_of_driver
+        data_type: varchar
+        description: ""
+
+  - name: dim_poi
+    description: ""
+    columns:
+      - name: poi_key
+        data_type: varchar
+        description: ""
+
+      - name: amenity
+        data_type: boolean
+        description: ""
+
+      - name: bump
+        data_type: boolean
+        description: ""
+
+      - name: crossing
+        data_type: boolean
+        description: ""
+
+      - name: give_way
+        data_type: boolean
+        description: ""
+
+      - name: junction
+        data_type: boolean
+        description: ""
+
+      - name: no_exit
+        data_type: boolean
+        description: ""
+
+      - name: railway
+        data_type: boolean
+        description: ""
+
+      - name: roundabout
+        data_type: boolean
+        description: ""
+
+      - name: station
+        data_type: boolean
+        description: ""
+
+      - name: stop
+        data_type: boolean
+        description: ""
+
+      - name: traffic_calming
+        data_type: boolean
+        description: ""
+
+      - name: traffic_signal
+        data_type: boolean
+        description: ""
+
+      - name: turning_loop
+        data_type: boolean
+        description: ""
+
+  - name: dim_severity
+    description: ""
+    columns:
+      - name: severity_key
+        data_type: varchar
+        description: ""
+
+      - name: severity_level
+        data_type: number
+        description: ""
+
+  - name: dim_state
+    description: ""
+    columns:
+      - name: state_key
+        data_type: varchar
+        description: ""
+
+      - name: state_name
+        data_type: varchar
+        description: ""
+
+  - name: dim_street
+    description: ""
+    columns:
+      - name: street_key
+        data_type: varchar
+        description: ""
+
+      - name: street_name
+        data_type: varchar
+        description: ""
+
+  - name: dim_time
+    description: ""
+    columns:
+      - name: time_key
+        data_type: varchar
+        description: ""
+
+      - name: start_time
+        data_type: varchar
+        description: ""
+
+      - name: end_time
+        data_type: varchar
+        description: ""
+
+      - name: timezone
+        data_type: varchar
+        description: ""
+
+  - name: dim_vehicle_accident_details
+    description: ""
+    columns:
+      - name: vehicle_accident_key
+        data_type: varchar
+        description: ""
+
+      - name: skidding_and_overturning
+        data_type: varchar
+        description: ""
+
+      - name: towing_and_articulation
+        data_type: varchar
+        description: ""
+
+      - name: vehicle_leaving_carriageway
+        data_type: varchar
+        description: ""
+
+      - name: vehicle_location_restricted_lane
+        data_type: float
+        description: ""
+
+      - name: vehicle_manoeuvre
+        data_type: varchar
+        description: ""
+
+      - name: x1st_point_of_impact
+        data_type: varchar
+        description: ""
+
+  - name: dim_vehicle
+    description: ""
+    columns:
+      - name: vehicle_key
+        data_type: varchar
+        description: ""
+
+      - name: make
+        data_type: varchar
+        description: ""
+
+      - name: model
+        data_type: varchar
+        description: ""
+
+      - name: age_of_vehicle
+        data_type: number
+        description: ""
+
+      - name: engine_capacity_cc
+        data_type: number
+        description: ""
+
+      - name: propulsion_code
+        data_type: varchar
+        description: ""
+
+      - name: vehicle_type
+        data_type: varchar
+        description: ""
+
+      - name: was_vehicle_left_hand_drive
+        data_type: varchar
+        description: ""
+
+  - name: dim_weather_condition
+    description: ""
+    columns:
+      - name: weather_condition_key
+        data_type: varchar
+        description: ""
+
+      - name: weather_condition
+        data_type: varchar
+        description: ""
+
+  - name: dim_weather
+    description: ""
+    columns:
+      - name: weather_key
+        data_type: varchar
+        description: ""
+
+      - name: weather_timestamp
+        data_type: varchar
+        description: ""
+
+      - name: temperature(f)
+        data_type: float
+        description: ""
+
+      - name: wind_chill(f)
+        data_type: float
+        description: ""
+
+      - name: humidity(%)
+        data_type: float
+        description: ""
+
+      - name: pressure(in)
+        data_type: float
+        description: ""
+
+      - name: visibility(mi)
+        data_type: float
+        description: ""
+
+      - name: wind_direction
+        data_type: varchar
+        description: ""
+
+      - name: wind_speed(mph)
+        data_type: float
+        description: ""
+
+      - name: precipitation(in)
+        data_type: float
+        description: ""

@@ -1,0 +1,11 @@
+version: "2"
+
+
+sources:
+  - name: src_accident_vehicle_us
+    schema: staging
+    database: accident_us_db
+
+    tables: 
+      - name: staging_accident
+      - name: staging_vehicle
